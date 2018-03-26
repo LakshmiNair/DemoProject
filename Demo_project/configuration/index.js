@@ -1,10 +1,19 @@
-﻿
+﻿const configDB = 'single_photon';
+const configUser = 'singlephoton'
+const configPwd = 'singlephoton18'
+const secretKey= 'supersecretkey'
 const config = {
-    dialect: 'mssql',
-    dialectModulePath: 'sequelize-odbc-mssql',
-    dialectOptions: {
-        connectionString: 'Driver={SQL Server Native Client 11.0};Server=WINDOWS-RCGQNV3;Database=DemoDB_2;Trusted_Connection=yes;'
-    }
+    host: 'Singlephoton.cuze9uvn3shp.us-east-1.rds.amazonaws.com',
+    dialect: 'mysql',
+    operatorsAliases: false,
+
+    pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+    },
+
 };
 
-module.exports= { config }
+module.exports = { configDB, configUser, configPwd, config, secretKey }
