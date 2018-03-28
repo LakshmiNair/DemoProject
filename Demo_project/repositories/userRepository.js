@@ -22,88 +22,28 @@ function create({ User, UserAddress, UserProfile }) {
         const users = await User.findAll();
         return users.map(user => user.toUserModel());
     }
-
+    async function validate(password, user) {
+        var result1;
+        let comparison = await bcrypt.compare(user.password, password);
+        if (!comparison)
+            throw new Error('Unauthorized User!');
+        else {
+            return await jwt.encode({ email: user.email }, secretKey);
+        }       
+        
+    }
     async function validateUser(user) {
         const users = await User.findAll({
             where: {
                 email: user.email
             }
         });
-        if (users) {
-            users.map(user1 => user1.toUserModel());
-            var pass = (users[0].dataValues.password);
-            await bcrypt.compare(user.password, pass, function (err, valid) {
-                if (err) {
-                    var result = JSON.stringify({
-                        success: false,
-                        message: 'Error!',
-                        token: err
-                    });
-                    console.log("err");
-                    return (result);
-                    //next(err)
-                }
-                else if (!valid) {
-                    var result = JSON.stringify({
-                        success: false,
-                        message: 'Unauthorized User!',
-                        token: 401
-                    });
-                    return (result);
-                    //res.send(401)
-                }//unauthorized
-                else {
-                    var token = jwt.encode({ email: users.email }, secretKey);
-                    var result = JSON.stringify({
-                        success: true,
-                        message: 'Enjoy your token!',
-                        token: token
-                    });
-                    return (result);
-                }
-                //res.json(token)
-
-            })
-        }
-       
-        //.then(function (user) {
-        //    const a = user;
-        //    return (a);
-        //})
-        //.catch(function (err) {
-        //    console.error(err.stack)
-        //    return ("error") // server problems
-        //});
-        //return users.map(user => user.toUserModel());
-
-        //.then(function (user) {
-        //    if (user && user.validPassword(req.body.password)) {
-        //        //return res.status(200).json({ message: "loged in!" }); // username and password match
-
-
-        //        var payload = { user: user.id };
-
-        //        // create a token
-        //        var token = jwt.sign(payload, jwtConfig.secret, {
-        //            expiresIn: jwtConfig.expirationTime
-        //        });
-
-
-        //        // return the information including token as JSON
-        //        res.json({
-        //            success: true,
-        //            message: 'Enjoy your token!',
-        //            token: token
-        //        });
-
-        //    }
-        //    else {
-        //        return res.status(401).json({ message: "Unauthorized, invalid fields" }); // if there is no user with specific fields send
-        //    }
-        //}).catch(function (err) {
-        //    console.error(err.stack)
-        //    return res.status(500).json({ message: "server issues when trying to login!" }); // server problems
-        //});
+        await users.map(user1 => user1.toUserModel());
+        if (users[0])
+            return await validate(users[0].dataValues.password, user);
+        else
+            throw new Error('Unauthorized User!');
+                         
     }
 
     async function add(user) {
@@ -134,10 +74,10 @@ function create({ User, UserAddress, UserProfile }) {
                 //save user profile
                 var profile = user.profile;
                 profile.user_id = newuser.membership_id;
-                return await UserProfile.build(profile).save({ transaction: t });
+                await UserProfile.build(profile).save({ transaction: t });
 
-                await t.commit();
-
+                 await t.commit();
+                 return ("Inserted");
             
             //return result;
         }

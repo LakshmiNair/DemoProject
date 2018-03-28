@@ -21,7 +21,7 @@ function create({ userService }) {
         //console.log("main");
         
         const result = await userService.validateUser(user);
-        console.log(result);
+        //console.log(result);
         res.json(result);
     }));
 
@@ -39,12 +39,12 @@ function create({ userService }) {
             console.log(result);
             //res.json(result);
             if (result.errors) {
-                if (result.errors[0].message == "membership_id_UNIQUE must be unique")
+                if (result.errors[0].message == "membership_id_UNIQUE must be unique" || result.errors[0].message =="anton_user.password cannot be null")
                     res.json("Email already in use!");
                 else
                     res.json(result.errors[0].message);
             }
-            else { res.json(JSON.stringify({"message":"User Registered!"})); }
+            else { res.json("User Registered!"); }
                 
         }
         
