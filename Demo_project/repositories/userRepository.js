@@ -5,7 +5,7 @@
 // Furthermore it can hide the origin of the data from it's consumers.
 // It is possible to fetch the entities from different sources like inmemory cache, 
 // network or the db without the need to alter the consumers code.
-
+const nodemailer = require("nodemailer");
 const Sequelize = require('sequelize');
 const aguid = require('aguid');
 const bcrypt = require('bcrypt');
@@ -90,10 +90,43 @@ function create({ User, UserAddress, UserProfile }) {
        
     }
 
+    async function generateActivationCode() {
+        //var smtpTransport = nodemailer.createTransport({
+        //    service: "gmail",
+        //    host: "smtp.gmail.com",
+        //    auth: {
+        //        user: "",
+        //        pass: ""
+        //    }
+        //});
+        //var mailOptions = {
+        //    to: req.query.to,
+        //    subject: req.query.subject,
+        //    text: req.query.text
+        //}
+        //console.log(mailOptions);
+        //smtpTransport.sendMail(mailOptions, function (error, response) {
+        //    if (error) {
+        //        console.log(error);
+        //        res.end("error");
+        //    } else {
+        //        console.log("Message sent: " + response.message);
+        //        res.end("sent");
+        //    }
+        //});
+        const users = await User.findAll();
+        return users.map(user => user.toUserModel());
+    }
+    async function resetPassword() {
+        const users = await User.findAll();
+        return users.map(user => user.toUserModel());
+    }
+
     return {
         add,
         validateUser,
         getAll,
+        resetPassword,
     };
 }
 
