@@ -10,7 +10,9 @@ function create({ userService }) {
     }));
 
     router.post('/validateuser', asyncWrapper(async (req, res) => {
+
         const user = req.body;
+        console.log(user);
         if (JSON.stringify(user) == "{}") {
             return res.status(400).json({ Error: "Login request body is empty" });
         }
@@ -21,7 +23,7 @@ function create({ userService }) {
         //console.log("main");
         
         const result = await userService.validateUser(user);
-        //console.log(result);
+        console.log(result);
         res.json(result);
     }));
 

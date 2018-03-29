@@ -5,6 +5,10 @@ const errorRoute = require('./routes/error');
 const userRoute = require('./routes/user');
 
 const app = express();
+
+const cors = require('cors')
+app.use(cors());
+
 app.use(bodyParser.json());
 
 module.exports = (services) => {

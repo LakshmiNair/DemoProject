@@ -1,6 +1,5 @@
 class UserAddress {
 
-
     constructor(Id,user_id,name, institution, occupation,phone, address, city, postcode, state, country){
         this.id = Id;
         this.user_id = user_id;
