@@ -108,20 +108,13 @@ function create({ User, UserAddress, UserProfile }) {
             subject: "Test Email",
             text: "Activayion Code: " + aCode,
         }
-        const message=await smtpTransport.sendMail(mailOptions);
-        //console.log(mailOptions);
-        //smtpTransport.sendMail(mailOptions, function (error, response) {
-        //    if (error) {
-        //        console.log(error);
-        //        return ("error");
-        //    } else {
-        //        console.log(response);
-        //        console.log("Message sent: " + response.message);
-        //        return ("sent");
-        //    }
-        //});
-        console.log(message);
-        return message;
+        const message = await smtpTransport.sendMail(mailOptions);
+        if (message.error)
+            return message.error;
+        else
+            return ("Email sent");
+        //console.log(message);
+        //return message;
         
     }
     async function resetPassword(user) {
