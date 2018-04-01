@@ -6,6 +6,7 @@
 // It is possible to fetch the entities from different sources like inmemory cache, 
 // network or the db without the need to alter the consumers code.
 const nodemailer = require("nodemailer");
+const keygen = require('keygenerator');
 const Sequelize = require('sequelize');
 const aguid = require('aguid');
 const bcrypt = require('bcrypt');
@@ -90,42 +91,56 @@ function create({ User, UserAddress, UserProfile }) {
        
     }
 
-    async function generateActivationCode() {
-        //var smtpTransport = nodemailer.createTransport({
-        //    service: "gmail",
-        //    host: "smtp.gmail.com",
-        //    auth: {
-        //        user: "",
-        //        pass: ""
-        //    }
-        //});
-        //var mailOptions = {
-        //    to: req.query.to,
-        //    subject: req.query.subject,
-        //    text: req.query.text
-        //}
+    async function generateActivationCode(user) {
+        //generate activation code
+        var aCode = keygen.password();
+
+        var smtpTransport = nodemailer.createTransport({
+            service: "gmail",
+            host: "smtp.gmail.com",
+            auth: {
+                user: "lekshmi@summitworks.com",
+                pass: "tumacha1506"
+            }
+        });
+        var mailOptions = {
+            to: "lekshmi@summitworks.com",
+            subject: "Test Email",
+            text: "Activayion Code: " + aCode,
+        }
+        const message=await smtpTransport.sendMail(mailOptions);
         //console.log(mailOptions);
         //smtpTransport.sendMail(mailOptions, function (error, response) {
         //    if (error) {
         //        console.log(error);
-        //        res.end("error");
+        //        return ("error");
         //    } else {
+        //        console.log(response);
         //        console.log("Message sent: " + response.message);
-        //        res.end("sent");
+        //        return ("sent");
         //    }
         //});
-        const users = await User.findAll();
-        return users.map(user => user.toUserModel());
+        console.log(message);
+        return message;
+        
     }
-    async function resetPassword() {
-        const users = await User.findAll();
-        return users.map(user => user.toUserModel());
+    async function resetPassword(user) {
+        
+        console.log(user.password);
+        var password =await bcrypt.hash(user.password, 10);
+        console.log(password);
+        return await User.update(
+            { password: password },
+            { returning: true, where: { email: user.email } }
+        );
+        
     }
 
     return {
         add,
         validateUser,
         getAll,
+        generateActivationCode,
         resetPassword,
     };
 }

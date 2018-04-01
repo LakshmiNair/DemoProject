@@ -18,6 +18,7 @@
     "debug": "^2.2.0",
     "express": "^4.14.0",
     "jwt-simple": "^0.5.1",
+    "keygenerator": "^1.0.4",
     "morgan": "^1.7.0",
     "mysql": "^2.15.0",
     "mysql2": "^1.5.3",

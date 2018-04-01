@@ -9,6 +9,23 @@ function create({ userService }) {
         res.json(users);
     }));
 
+    router.post('/generateActivationCode', asyncWrapper(async (req, res) => {
+        const code = await userService.generateActivationCode(req.body);
+
+        res.json(code);
+    }
+    ));
+
+    router.post('/resetPassword', asyncWrapper(async (req, res) => {
+        const reset = await userService.resetPassword(req.body);
+        if (reset[1] == 0)
+            res.json("Invalid Email!")
+        else if (reset[1] == 1)
+            res.json("Password Updated!")
+        else
+            res.json(reset);
+    }
+    ));
     router.post('/validateuser', asyncWrapper(async (req, res) => {
 
         const user = req.body;
