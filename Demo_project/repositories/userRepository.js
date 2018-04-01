@@ -99,8 +99,8 @@ function create({ User, UserAddress, UserProfile }) {
             service: "gmail",
             host: "smtp.gmail.com",
             auth: {
-                user: "lekshmi@summitworks.com",
-                pass: "tumacha1506"
+                user: "singlephoton.dev@gmail.com",
+                pass: "singlephoton2018"
             }
         });
         var mailOptions = {
