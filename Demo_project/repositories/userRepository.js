@@ -27,7 +27,7 @@ function create({ User, UserAddress, UserProfile }) {
         var result1;
         let comparison = await bcrypt.compare(user.password, password);
         if (!comparison)
-            throw new Error('Unauthorized User!');
+            return ('Unauthorized User!');
         else {
             return await jwt.encode({ email: user.email }, secretKey);
         }       
@@ -85,6 +85,7 @@ function create({ User, UserAddress, UserProfile }) {
         catch (error) {
             // Rollback transaction if any errors were encountered
             await t.rollback();
+            
             //console.log(t);
             return (error);
         }

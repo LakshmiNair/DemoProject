@@ -40,8 +40,10 @@ function create({ userService }) {
         //console.log("main");
         
         const result = await userService.validateUser(user);
-        console.log(result);
-        res.json(result);
+        if (result == "Unauthorized User!")
+            return res.status(400).json({ Error: "Unauthorized User!" });
+        else 
+            res.json(result);
     }));
 
     // TODO: Install middleware to validate the input
@@ -59,9 +61,9 @@ function create({ userService }) {
             //res.json(result);
             if (result.errors) {
                 if (result.errors[0].message == "membership_id_UNIQUE must be unique" || result.errors[0].message =="anton_user.password cannot be null")
-                    res.json("Email already in use!");
+                    return res.status(400).json({ Error: "Email already in use!" });
                 else
-                    res.json(result.errors[0].message);
+                    return res.status(400).json({ Error: result.errors[0].message });
             }
             else { res.json("User Registered!"); }
                 
