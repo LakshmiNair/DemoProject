@@ -8,7 +8,7 @@ const { config } = require('../../configuration');
 
 const sequelize = new Sequelize(configDB, configUser, configPwd, config);
 const userModel = require('../../models/user');
-
+const userprofileModel = require('../../models/userprofile');
 
 module.exports = (sequelize) => {
     const UserProfile = sequelize.define('anton_user_profile_type', {

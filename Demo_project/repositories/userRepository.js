@@ -18,18 +18,22 @@ const { config } = require('../configuration');
 const { secretKey } = require('../configuration');
 
 const sequelize = new Sequelize(configDB, configUser, configPwd, config);
-function create({ User, UserAddress, UserProfile }) {
+// Override timezone formatting
+
+function create({ User, UserAddress, UserProfile, Collection, UserActCode }) {
     async function getAll() {
         const users = await User.findAll();
         return users.map(user => user.toUserModel());
     }
-    async function validate(password, user) {
+    async function validate(password, user, name) {
         var result1;
         let comparison = await bcrypt.compare(user.password, password);
         if (!comparison)
             return ('Unauthorized User!');
         else {
-            return await jwt.encode({ email: user.email }, secretKey);
+            const token = await jwt.encode({ email: user.email }, secretKey);
+            const result = { 'token': token, 'user': name };
+            return result;
         }       
         
     }
@@ -41,17 +45,18 @@ function create({ User, UserAddress, UserProfile }) {
         });
         await users.map(user1 => user1.toUserModel());
         if (users[0])
-            return await validate(users[0].dataValues.password, user);
+            return await validate(users[0].dataValues.password, user, users[0].dataValues.name);
         else
             throw new Error('Unauthorized User!');
                          
     }
 
     async function add(user) {
+        console.log(user);
         var password;
         bcrypt.hash(user.user.password, 10, function (err, hash) {
             password = hash;
-            //console.log(password);
+            
         });
 
         const t = await sequelize.transaction();
@@ -65,20 +70,26 @@ function create({ User, UserAddress, UserProfile }) {
                 var guid = aguid(newuser.email);
                 newuser.membership_id = guid;
                 newuser.password = password;
-                await User.build(newuser).save({transaction: t});
-
+                await User.build(newuser).save({ transaction: t });
+                
                 //save user address
-                var address = user.address;
-                address.user_id = newuser.membership_id;
-                await UserAddress.build(address).save({ transaction: t });
+                var address = UserAddress.build({ "user_id": newuser.membership_id });
+                address.name = newuser.name;
+                await address.save({ transaction: t });
 
                 //save user profile
-                var profile = user.profile;
-                profile.user_id = newuser.membership_id;
-                await UserProfile.build(profile).save({ transaction: t });
+                var profile = UserProfile.build({ "user_id": newuser.membership_id });
+                profile.name = newuser.name;
+                await profile.save({ transaction: t });
 
-                 await t.commit();
-                 return ("Inserted");
+                //create new collection for user
+                var collection = Collection.build({ "user_id": newuser.membership_id });
+                collection.collection_name = newuser.name + newuser.email;
+                collection.create_time = new Date();
+                await collection.save({ transaction: t });
+
+                await t.commit();
+                return ("Inserted");
             
             //return result;
         }
@@ -92,41 +103,134 @@ function create({ User, UserAddress, UserProfile }) {
        
     }
 
-    async function generateActivationCode(user) {
-        //generate activation code
-        var aCode = keygen.password();
-
-        var smtpTransport = nodemailer.createTransport({
-            service: "gmail",
-            host: "smtp.gmail.com",
-            auth: {
-                user: "singlephoton.dev@gmail.com",
-                pass: "singlephoton2018"
-            }
+    async function update(user) {
+        var token =await jwt.decode(user.user.token, secretKey);
+        const vUser = await User.findOne({
+            where: { "email": token.email }
         });
-        var mailOptions = {
-            to: "lekshmi@summitworks.com",
-            subject: "Test Email",
-            text: "Activayion Code: " + aCode,
+        const validuser = vUser.toUserModel();
+        if (validuser) {
+            const t = await sequelize.transaction();
+            try {
+
+                const aR = await UserAddress.findOne({ where: { "user_id": validuser.membership_id } });
+                const pR = await UserProfile.findOne({ where: { "user_id": validuser.membership_id } });
+                //save user address
+                await aR.update(user.address, { transaction: t });
+
+                //save user profile
+                await pR.update(user.profile, { transaction: t });
+
+                await t.commit();
+                return ("Updated");
+
+                //return result;
+            }
+            catch (error) {
+                console.log(error);
+                // Rollback transaction if any errors were encountered
+                await t.rollback();
+
+                //console.log(t);
+                return (error);
+            }
         }
-        const message = await smtpTransport.sendMail(mailOptions);
-        if (message.error)
-            return message.error;
-        else
-            return ("Email sent");
-        //console.log(message);
-        //return message;
+        else {
+            return ("Invalid Token!");
+        }
+        
+
+    }
+
+    async function generateActivationCode(user) {
+        try {
+            //check if valid email
+
+            const user1 = await User.find({
+                where: {
+                    email: user.email
+                }
+            });
+            
+            if (user1) {
+                //generate activation code
+                var aCode = keygen.password();
+
+                var smtpTransport = nodemailer.createTransport({
+                    service: "gmail",
+                    host: "smtp.gmail.com",
+                    auth: {
+                        user: "singlephoton.dev@gmail.com",
+                        pass: "singlephoton2018"
+                    }
+                });
+                var mailOptions = {
+                    to: user.email,
+                    subject: "Test Email",
+                    text: "Activayion Code: " + aCode,
+                }
+                const message = await smtpTransport.sendMail(mailOptions);
+                if (message.error)
+                    return message.error;
+                else {
+                    var activationcode = UserActCode.build();
+                    activationcode.user_id = user1.membership_id;
+                    activationcode.activation_code = aCode;
+                    activationcode.generated_time = new Date();
+                    activationcode.active = true;
+                    await activationcode.save();
+                    return ("Email sent");
+                }
+            }   
+            //console.log(message);
+            //return message;
+        }
+        catch (error) {
+            return error;
+        }
+        
         
     }
     async function resetPassword(user) {
         
-        console.log(user.password);
-        var password =await bcrypt.hash(user.password, 10);
+        
+        var password = await bcrypt.hash(user.password, 10);
         console.log(password);
-        return await User.update(
-            { password: password },
-            { returning: true, where: { email: user.email } }
-        );
+        const validuser1 =await User.find({
+            where: {
+                email: user.email
+            }
+        });
+        const a = await UserActCode.findAll({
+            limit: 1,
+            where: {
+                user_id: validuser1.membership_id
+            },
+            order: [['generated_time', 'DESC']]
+        });
+        const validuser =await a.map(u => u.toUserActCodeModel());
+        
+        if (validuser) {
+            
+            if (validuser[0].code == user.code && validuser[0].active) {
+                
+                //update actcode active to 0
+                await UserActCode.update(
+                    { active: false },
+                    { returning: true, where: { id: validuser[0].id } }
+                );
+                
+                return await User.update(
+                    { password: password },
+                    { returning: true, where: { email: user.email } }
+                );
+            }
+            else
+                return "Invalid Code";
+        }
+        else
+            return "Invalid Code";
+        
         
     }
 
@@ -136,6 +240,7 @@ function create({ User, UserAddress, UserProfile }) {
         getAll,
         generateActivationCode,
         resetPassword,
+        update,
     };
 }
 

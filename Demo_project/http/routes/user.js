@@ -49,15 +49,16 @@ function create({ userService }) {
     // TODO: Install middleware to validate the input
     router.post('/', asyncWrapper(async (req, res) => {
         const user = req.body;
+        
         if (JSON.stringify(user) == "{}") {
             return res.status(400).json({ Error: "Register request body is empty" });
         }
-        if (!user.user.email || !user.user.name || !user.user.password || !user.address.name || !user.profile.name) {
+        if (!user.user.email || !user.user.name || !user.user.password ) {
             return res.status(400).json({ Error: "Missing fields for registration" });
         }
         else {
             const result =await userService.createUser(user);
-            console.log(result);
+            
             //res.json(result);
             if (result.errors) {
                 if (result.errors[0].message == "membership_id_UNIQUE must be unique" || result.errors[0].message =="anton_user.password cannot be null")
@@ -70,7 +71,16 @@ function create({ userService }) {
         }
         
     }));
-
+    router.post('/updateUser', asyncWrapper(async (req, res) => {
+        const reset = await userService.updateUser(req.body);
+        if (reset[1] == 0)
+            res.json("Invalid Entry!")
+        else if (reset[1] == 1)
+            res.json("User Profile Updated!")
+        else
+            res.json(reset);
+    }
+    ));
     return router;
 }
 

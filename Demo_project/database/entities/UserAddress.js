@@ -8,10 +8,10 @@ const { config } = require('../../configuration');
 
 const sequelize = new Sequelize(configDB, configUser, configPwd, config);
 const userModel = require('../../models/user');
-
+const useraddressModel = require('../../models/useraddress');
 module.exports = (sequelize) => {
     const UserAddress = sequelize.define('anton_user_address', {
-        Id: {
+        id: {
             type: Sequelize.INTEGER,
             allowNull: false,
             primaryKey: true,
@@ -61,7 +61,7 @@ module.exports = (sequelize) => {
     // Map to application model so we don't have tight coupling 
     // throughout the app with the db implemenation
     UserAddress.prototype.toUserAddressModel = function toUserAddressModel() {
-        return new useraddressModel(this.Id,this.user_id, this.name, this.institution, this.occupation, this.phone, this.address, this.city, this.postcode, this.state, this.country);
+        return new useraddressModel(this.id,this.user_id, this.name, this.institution, this.occupation, this.phone, this.address, this.city, this.postcode, this.state, this.country);
     };
     
     return UserAddress;

@@ -20,11 +20,14 @@ function create(userRepository) {
         const result = await userRepository.add(user);        
         return result;
     }
+    async function resetPassword(user) {
+        return (await userRepository.resetPassword(user));
+    }
     async function generateActivationCode(user) {
         return (await userRepository.generateActivationCode(user));
     }
-    async function resetPassword(user) {
-        return (await userRepository.resetPassword(user));
+    async function updateUser(user) {
+        return (await userRepository.update(user));
     }
 
     return {
@@ -33,6 +36,7 @@ function create(userRepository) {
         getAllUsers,
         generateActivationCode,
         resetPassword,
+        updateUser,
     };
 }
 

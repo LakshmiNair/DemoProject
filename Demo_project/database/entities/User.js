@@ -7,6 +7,7 @@ const { config } = require('../../configuration');
 
 const sequelize = new Sequelize(configDB, configUser, configPwd, config);
 const userModel = require('../../models/user');
+const usercollectionModel = require('../../models/usercollections');
 
 module.exports = (sequelize) => {
     const User = sequelize.define('anton_user', {
@@ -56,6 +57,10 @@ module.exports = (sequelize) => {
         
 
     }, { timestamps: false, freezeTableName: true });
+    //User.associate = function (models) {
+    //    models.User.hasMany(models.Collection);
+    //};
+   // User.hasMany(Collection);
     //Contact.hasOne(User, {
     //    foreignKey: 'ContactId'
     //});
@@ -63,6 +68,9 @@ module.exports = (sequelize) => {
     // throughout the app with the db implemenation
     User.prototype.toUserModel = function toUserModel() {
         return new userModel(this.Id, this.create_time, this.email, this.password, this.membership_id, this.name, this.active, this.disk_usage, this.last_login, this.user_type, this.deleted);
+    };
+    User.prototype.toUserCollectionModel = function toUserCollectionModel() {
+        return new usercollectionModel(this.Id, this.create_time, this.email, this.password, this.membership_id, this.name, this.active, this.disk_usage, this.last_login, this.user_type, this.deleted,this.collections);
     };
    
     return User;
