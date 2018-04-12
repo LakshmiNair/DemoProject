@@ -10,6 +10,11 @@ function create(userRepository) {
         return users;
     }
 
+    async function getUser(token) {
+        const user = await userRepository.getUser(token);
+        return user;
+    }
+
     async function validateUser(user) {
         console.log("service");
         return (await userRepository.validateUser(user));
@@ -34,6 +39,7 @@ function create(userRepository) {
         createUser,
         validateUser,
         getAllUsers,
+        getUser,
         generateActivationCode,
         resetPassword,
         updateUser,

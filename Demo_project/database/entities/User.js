@@ -8,7 +8,7 @@ const { config } = require('../../configuration');
 const sequelize = new Sequelize(configDB, configUser, configPwd, config);
 const userModel = require('../../models/user');
 const usercollectionModel = require('../../models/usercollections');
-
+const userdetailsModel = require('../../models/userdetails');
 module.exports = (sequelize) => {
     const User = sequelize.define('anton_user', {
         Id: {
@@ -72,7 +72,9 @@ module.exports = (sequelize) => {
     User.prototype.toUserCollectionModel = function toUserCollectionModel() {
         return new usercollectionModel(this.Id, this.create_time, this.email, this.password, this.membership_id, this.name, this.active, this.disk_usage, this.last_login, this.user_type, this.deleted,this.collections);
     };
-   
+    User.prototype.toUserDetailsModel = function toUserDetailsModel() {
+        return new userdetailsModel(this.Id, this.create_time, this.email, this.password, this.membership_id, this.name, this.active, this.disk_usage, this.last_login, this.user_type, this.deleted, this.anton_user_addresses, this.anton_user_profile_types);
+    };
     return User;
 };
 

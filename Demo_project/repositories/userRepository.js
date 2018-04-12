@@ -20,10 +20,38 @@ const { secretKey } = require('../configuration');
 const sequelize = new Sequelize(configDB, configUser, configPwd, config);
 // Override timezone formatting
 
-function create({ User, UserAddress, UserProfile, Collection, UserActCode }) {
+function create({ User, UserAddress, UserProfile, Collection, UserActCode, db }) {
     async function getAll() {
         const users = await User.findAll();
         return users.map(user => user.toUserModel());
+    }
+
+    async function getUser(token) {
+        try {
+            var email = jwt.decode(token, secretKey);
+            console.log(email);
+            const user = await db.User.find({
+
+                include: [
+                    {
+                        model: db.UserAddress
+                    },
+                    {
+                        model: db.UserProfile
+                    }
+                ],
+                
+                where: { "email": "vishnuv111@gmail.com" }
+            });
+            
+            return user.toUserDetailsModel();
+        }
+        catch (error) {
+            console.log("error");
+            console.log(error);
+            return error;
+        }
+        
     }
     async function validate(password, user, name) {
         var result1;
@@ -238,6 +266,7 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode }) {
         add,
         validateUser,
         getAll,
+        getUser,
         generateActivationCode,
         resetPassword,
         update,

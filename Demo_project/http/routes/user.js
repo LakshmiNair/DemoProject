@@ -9,6 +9,12 @@ function create({ userService }) {
         res.json(users);
     }));
 
+    router.get('/getUser', asyncWrapper(async (req, res) => {
+        var token = req.headers.authorization;
+        const user = await userService.getUser(token);
+        res.json(user);
+    }));
+
     router.post('/generateActivationCode', asyncWrapper(async (req, res) => {
         const code = await userService.generateActivationCode(req.body);
 

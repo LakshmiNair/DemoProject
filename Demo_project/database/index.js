@@ -24,6 +24,8 @@ const Collection = require('./entities/Collection')(sequelize);
 const User = require('./entities/User')(sequelize);
 db.Collection = require('./entities/Collection')(sequelize, Sequelize);
 db.User = require('./entities/User')(sequelize, Sequelize);
+db.UserAddress = require('./entities/UserAddress')(sequelize, Sequelize);
+db.UserProfile = require('./entities/UserProfile')(sequelize, Sequelize);
 const UserAddress = require('./entities/UserAddress')(sequelize);
 const UserProfile = require('./entities/UserProfile')(sequelize);
 const UserActCode = require('./entities/UserActCode')(sequelize);
@@ -31,8 +33,11 @@ const UserActCode = require('./entities/UserActCode')(sequelize);
 db.Collection.belongsTo(db.User, { foreignKey: 'user_id', sourceKey:'membership_id' });
 db.User.hasMany(db.Collection, { foreignKey: 'user_id', sourceKey: 'membership_id' }); 
 
+db.UserAddress.belongsTo(db.User, { foreignKey: 'user_id', sourceKey: 'membership_id' });
+db.User.hasMany(db.UserAddress, { foreignKey: 'user_id', sourceKey: 'membership_id' }); 
 
-
+db.UserProfile.belongsTo(db.User, { foreignKey: 'user_id', sourceKey: 'membership_id' });
+db.User.hasMany(db.UserProfile, { foreignKey: 'user_id', sourceKey: 'membership_id' }); 
 //sequelize.sync();
 
 module.exports = {
