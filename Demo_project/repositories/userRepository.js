@@ -167,7 +167,7 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode }) {
                 var mailOptions = {
                     to: user.email,
                     subject: "Test Email",
-                    text: "Activayion Code: " + aCode,
+                    text: "Activation Code: " + aCode,
                 }
                 const message = await smtpTransport.sendMail(mailOptions);
                 if (message.error)
