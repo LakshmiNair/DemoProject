@@ -41,7 +41,7 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                     }
                 ],
                 
-                where: { "email": "vishnuv111@gmail.com" }
+                where: email
             });
             
             return user.toUserDetailsModel();
