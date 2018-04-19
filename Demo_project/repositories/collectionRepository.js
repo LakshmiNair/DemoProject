@@ -13,6 +13,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jwt-simple');
 const fs = require("fs");
 var multer = require("multer");
+const path = require('path');
 const { configDB } = require('../configuration');
 const { configUser } = require('../configuration');
 const { configPwd } = require('../configuration');
@@ -50,42 +51,75 @@ function create({ Collection, User,db}) {
         ////console.log(collection);
         //return collection.toCollectionModel();
     }
-
-    async function uploadFile(file,body) {
-        //var email = jwt.decode(file.token, secretKey);
-        //const user = await db.User.find({ where: { "email": email } });
-        //if (user) {
-        console.log('entered');
+    /*
+    {
+    token:<the provided login-token>,
+    file:<the file to store>
+    u_path:<path (from user's root) that ends with the target folder>,
+    owner:<the _username of the uploader>,
+    
+}
+    */
+    async function uploadFile(file,body,token) {
+        var email = jwt.decode(token, secretKey);
+        const user = await db.User.find({ where: email });
+        if (user) {
         var from = "./temp/" + file.originalname;
-        console.log("from:" + from);
-        var parent = body.u_path;
-        console.log("parent:" + parent);
-        var rel_path = parent + file.originalname;
-        console.log("rel_path" + rel_path);
-        var to = "./uploads/" + file.originalname;
+        var u_collection = body.u_path;
+        var rel_path = './uploads/' + u_collection + file.originalname;
+        var to = rel_path ;
+        var ext = path.extname(file.originalname);
+        var filename = path.basename(file.originalname, ext);
+        fs.copyFileSync(from, to);        
+        if (fs.existsSync(to)) {
             
-            
-            
-        console.log("to: " + to);
-        //console.log(fs);
-            fs.copyFileSync(from, to);
-            if (fs.existsSync(to)) {
-                console.log("the file exists in the new directory");
                 //the file exists in the new directory, clean up temp
                 fs.unlinkSync(from);
                 //add a reference to the new file in the database
-                
+                var ds = Dataset.build();
+                ds.collection_id = 1212;
+                //ds.dataset_id = datasetId;
+                ds.name = filename;
+                ds.create_time = new Date();
+                //ds.metadata = metadata;
+                ds.extension = ext;
+                //ds.state = state;
+                ds.deleted = false;
                //Add dataset to database
-                
+                return ("File Uploaded!");
             } else {
-                console.log({
+            return({
                     "created": false,
                     "message": "File does not exist in desired directory."
                 });
             }
-        //}
+        }
     }
-    
+    async function newFolder(folder, body, token) {
+        var email = jwt.decode(token, secretKey);
+        const user = await db.User.find({ where: email });
+        if (user) {
+            var parent = folder.cur_path;
+            var rel_dest = parent + folder.name + "/";
+            //var dest = user.path_root + rel_dest;
+            var dest = './uploads' + rel_dest;
+            fs.mkdirSync(dest);
+            if (fs.existsSync(dest)) {
+            
+                return ("Folder Created!");
+                
+                //add a reference to the new folder in the database
+
+                //Add dataset to database
+
+            } else {
+                return ({
+                    "created": false,
+                    "message": "Folder does not exist in desired directory."
+                });
+            }
+        }
+    }
     return {
         get,
         uploadFile,

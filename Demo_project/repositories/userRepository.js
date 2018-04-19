@@ -43,7 +43,7 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                 
                 where: email
             });
-            
+            console.log(user);
             return user.toUserDetailsModel();
         }
         catch (error) {
@@ -144,8 +144,9 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                 const aR = await UserAddress.findOne({ where: { "user_id": validuser.membership_id } });
                 const pR = await UserProfile.findOne({ where: { "user_id": validuser.membership_id } });
                 //save user address
+                console.log(user.address);
                 await aR.update(user.address, { transaction: t });
-
+                console.log(user.profile);
                 //save user profile
                 await pR.update(user.profile, { transaction: t });
 

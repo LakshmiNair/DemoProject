@@ -10,8 +10,8 @@ function create(collectionRepository) {
         return collections;
     }
 
-    async function uploadFile(file,body) {
-        const dataset = await collectionRepository.uploadFile(file,body);
+    async function uploadFile(file,body,token) {
+        const dataset = await collectionRepository.uploadFile(file,body,token);
         return dataset;
     }
     

@@ -20,10 +20,8 @@ function create({ collectionService }) {
         res.json(collections);
     }));
     router.post('/col', upload.single("file"), asyncWrapper(async (req, res) => {
-        console.log(upload);
-        //var token = req.headers.authorization;
-        console.log("file"+ req.file);
-        const dataset = await collectionService.uploadFile(req.file,req.body);
+        var token = req.headers.authorization;
+        const dataset = await collectionService.uploadFile(req.file,req.body,token);
         res.json(dataset);
     }));
 

@@ -13,9 +13,13 @@ class UserDetails {
         this.last_login = last_login;
         this.user_type = user_type;
         this.deleted = deleted;
-        this.address = address.map(a=>a.toUserAddressModel());
-        this.profile = profile.map(p=>p.toUserProfileModel());
+        var add = address.map(a=>a.toUserAddressModel());;
+        //this.profile = profile.map(p=>p.toUserProfileModel());
+        this.address = add[0];
+        var pro = profile.map(p=>p.toUserProfileModel());
+        this.profile = pro[0];
     }
 }
-
+//this.address = address.map(a=>a.toUserAddressModel());
+//this.profile = profile.map(p=>p.toUserProfileModel());
 module.exports = UserDetails;

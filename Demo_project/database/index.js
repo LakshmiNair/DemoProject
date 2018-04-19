@@ -34,10 +34,10 @@ db.Collection.belongsTo(db.User, { foreignKey: 'user_id', sourceKey:'membership_
 db.User.hasMany(db.Collection, { foreignKey: 'user_id', sourceKey: 'membership_id' }); 
 
 db.UserAddress.belongsTo(db.User, { foreignKey: 'user_id', sourceKey: 'membership_id' });
-db.User.hasMany(db.UserAddress, { foreignKey: 'user_id', sourceKey: 'membership_id' }); 
+db.User.hasMany(db.UserAddress, { foreignKey: 'user_id', sourceKey: 'membership_id'}); 
 
 db.UserProfile.belongsTo(db.User, { foreignKey: 'user_id', sourceKey: 'membership_id' });
-db.User.hasMany(db.UserProfile, { foreignKey: 'user_id', sourceKey: 'membership_id' }); 
+db.User.hasMany(db.UserProfile, { foreignKey: 'user_id' , sourceKey: 'membership_id'}); 
 //sequelize.sync();
 
 module.exports = {

@@ -9,6 +9,7 @@ const { config } = require('../../configuration');
 const sequelize = new Sequelize(configDB, configUser, configPwd, config);
 const userModel = require('../../models/user');
 const userprofileModel = require('../../models/userprofile');
+const User = require('./User')(sequelize);
 
 module.exports = (sequelize) => {
     const UserProfile = sequelize.define('anton_user_profile_type', {
@@ -45,9 +46,9 @@ module.exports = (sequelize) => {
 
 
     }, { timestamps: false, freezeTableName: true });
-    //User.hasOne(UserProfile, {
-    //    foreignKey: 'user_id'
-    //});
+    User.hasOne(UserProfile, {
+        foreignKey: 'user_id'
+    });
     // Map to application model so we don't have tight coupling 
     // throughout the app with the db implemenation
     UserProfile.prototype.toUserProfileModel = function toUserProfileModel() {
