@@ -110,11 +110,7 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                 profile.name = newuser.name;
                 await profile.save({ transaction: t });
 
-                //create new collection for user
-                var collection = Collection.build({ "user_id": newuser.membership_id });
-                collection.collection_name = newuser.name + newuser.email;
-                collection.create_time = new Date();
-                await collection.save({ transaction: t });
+                
 
                 await t.commit();
                 return ("Inserted");

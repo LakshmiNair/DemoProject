@@ -8,7 +8,7 @@ const sequelize = new Sequelize(configDB, configUser, configPwd, config);
 const collectionModel = require('../../models/dataset');
 
 module.exports = (sequelize) => {
-    const Dataset = sequelize.define('dataset', {
+    const Dataset = sequelize.define('collection_dataset_association', {
         id: {
             type: Sequelize.INTEGER,
             allowNull: false,

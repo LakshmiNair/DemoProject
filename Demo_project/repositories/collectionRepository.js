@@ -32,7 +32,7 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage });
 
 const sequelize = new Sequelize(configDB, configUser, configPwd, config);
-function create({ Collection, User,db}) {
+function create({ Collection, User,db,Dataset}) {
     //get collection details for user
     async function get(token) {
         var email = jwt.decode(token, secretKey)
@@ -54,9 +54,9 @@ function create({ Collection, User,db}) {
     /*
     {
     token:<the provided login-token>,
-    file:<the file to store>
-    u_path:<path (from user's root) that ends with the target folder>,
-    owner:<the _username of the uploader>,
+    file:<the file to store>,
+    u_cID:<the collection ID>,
+    
     
 }
     */
@@ -64,35 +64,57 @@ function create({ Collection, User,db}) {
         var email = jwt.decode(token, secretKey);
         const user = await db.User.find({ where: email });
         if (user) {
-        var from = "./temp/" + file.originalname;
-        var u_collection = body.u_path;
-        var rel_path = './uploads/' + u_collection + file.originalname;
-        var to = rel_path ;
-        var ext = path.extname(file.originalname);
-        var filename = path.basename(file.originalname, ext);
-        fs.copyFileSync(from, to);        
-        if (fs.existsSync(to)) {
+            const collection=await db.Collection.find({where:{id:body.u_cID}});
+            if(collection){
+                var from = "./temp/" + file.originalname;
+                var to = './uploads/' + collection.collection_name +'/'+ file.originalname;
+                var ext = path.extname(file.originalname);
+                var filename = path.basename(file.originalname, ext);
+                var col_path='./uploads/' + collection.collection_name;
+                if(fs.existsSync(col_path)){
+                    fs.copyFileSync(from, to);        
+                    if (fs.existsSync(to)) {
             
-                //the file exists in the new directory, clean up temp
-                fs.unlinkSync(from);
-                //add a reference to the new file in the database
-                var ds = Dataset.build();
-                ds.collection_id = 1212;
-                //ds.dataset_id = datasetId;
-                ds.name = filename;
-                ds.create_time = new Date();
-                //ds.metadata = metadata;
-                ds.extension = ext;
-                //ds.state = state;
-                ds.deleted = false;
-               //Add dataset to database
-                return ("File Uploaded!");
-            } else {
-            return({
+                        //the file exists in the new directory, clean up temp
+                        fs.unlinkSync(from);
+                        //add a reference to the new file in the database
+                        var ds = Dataset.build();
+                        ds.collection_id = body.u_cID;
+                        //ds.dataset_id = datasetId;
+                        ds.name = filename;
+                        ds.create_time = new Date();
+                        //ds.metadata = metadata;
+                        ds.extension = ext;
+                        //ds.state = state;
+                        ds.deleted = false;
+                        ds.save();
+                        //Add dataset to database
+                        return ("File Uploaded!");
+                    } else {
+                        return({
+                            "created": false,
+                            "message": "File does not exist in the directory!"
+                        });
+                    }
+                }
+                else {
+                    return({
+                        "created": false,
+                        "message": "Invalid Collection!"
+                    });
+                }
+            }else {
+                return({
                     "created": false,
-                    "message": "File does not exist in desired directory."
+                    "message": "Invalid Collection!"
                 });
-            }
+            }                   
+        }
+        else {
+            return({
+                "created": false,
+                "message": "Invalid User!"
+            });
         }
     }
     async function newFolder(folder, body, token) {
@@ -105,7 +127,11 @@ function create({ Collection, User,db}) {
             var dest = './uploads' + rel_dest;
             fs.mkdirSync(dest);
             if (fs.existsSync(dest)) {
-            
+                //create new collection for user
+                //var collection = Collection.build({ "user_id": newuser.membership_id });
+                //collection.collection_name = newuser.membership_id + newuser.email;
+                //collection.create_time = new Date();
+                //await collection.save({ transaction: t });
                 return ("Folder Created!");
                 
                 //add a reference to the new folder in the database
