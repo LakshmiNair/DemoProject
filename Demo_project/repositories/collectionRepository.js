@@ -51,7 +51,7 @@ function create({ Collection, User,db,Dataset}) {
         ////console.log(collection);
         //return collection.toCollectionModel();
     }
-    /*
+    /*Adding a file to collection
     {
     token:<the provided login-token>,
     file:<the file to store>,
@@ -169,13 +169,13 @@ formatting:
     }
 
     /*
-creating a folder. Provide the token and the name of the folder to be created.
+renaming a folder.
 formatting:
 {
    "token":<the provided login-token>,
    "cur_name":<the name of the existing folder>,
    "new_name":<the name of the folder to be renamed>,
-   "col_id":<collection id>
+   "u_cID":<collection id>
 }
 */
     async function renameFolder(folder, token) {
@@ -197,11 +197,14 @@ formatting:
                     });
 
                     //create new collection for user
-                    var collection = Collection.find({where:{ "id": folder.col_id }});
+                    var collection = Collection.find({where:{ "id": folder.u_cID }});
                     collection.collection_name = folder.new_name;
                     collection.update_time = new Date();
-                    await Collection.update(collection,{ returning: true, where: { id:folder.col_id  } });
-                    return ("Folder Renamed!");
+                    await Collection.update(collection,{ returning: true, where: { id:folder.u_cID  } });
+                    return ({
+                        "created": true,
+                        "message": "Folder Renamed!"
+                    });
                 
 
                 } else {
@@ -227,11 +230,59 @@ formatting:
             });
         }
     }
+    /* deleting a folder. 
+        formatting:
+    {
+        "token":<the provided login-token>,
+        "u_cID":<collection id>
+        }
+    */
+    async function removeFolder(folder, token) {
+        var email = jwt.decode(token, secretKey);
+        const user = await db.User.find({ where: email });
+        if (user) {
+            const collection = await Collection.find({ where: {id:folder.u_cID} });
+            if (collection)
+            {
+                console.log(collection);
+                var parent = './uploads/' + user.membership_id +"/" + collection.collection_name;
+                console.log(parent);
+                if (fs.existsSync(parent)) {
+                    fs.rmdirSync(parent);
+                    await Collection.destroy({ returning: true, where: {id:folder.u_cID} });
+                    return ({
+                        "deleted": true,
+                        "message": "Folder Removed!"
+                    });
+                }
+                else{
+                    return({
+                        "deleted": false,
+                        "message": "Invalid Collection!"
+                    });
+                }
+            }
+            else{
+                return ({
+                    "deleted": false,
+                    "message": "Invalid Collection!"
+                });
+            }
+                  
+        }
+        else {
+            return ({
+                "created": false,
+                "message": "Invalid User!"
+            });
+        }
+    }
     return {
         get,
         uploadFile,
         newFolder,
             renameFolder,
+            removeFolder,
     };
 }
 

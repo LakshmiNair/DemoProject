@@ -22,12 +22,17 @@ function create(collectionRepository) {
         const collection = await collectionRepository.renameFolder(file,token);
         return collection;
     }
+    async function removeFolder(file,token) {
+        const collection = await collectionRepository.removeFolder(file,token);
+        return collection;
+    }
     
     return {
         getCollection,
         uploadFile,
         newFolder,
         renameFolder,
+        removeFolder,
     };
 }
 
