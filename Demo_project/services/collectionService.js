@@ -14,10 +14,15 @@ function create(collectionRepository) {
         const dataset = await collectionRepository.uploadFile(file,body,token);
         return dataset;
     }
+    async function newFolder(file,token) {
+        const collection = await collectionRepository.newFolder(file,token);
+        return collection;
+    }
     
     return {
         getCollection,
         uploadFile,
+        newFolder,
     };
 }
 

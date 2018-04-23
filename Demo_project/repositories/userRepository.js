@@ -16,7 +16,17 @@ const { configUser } = require('../configuration');
 const { configPwd } = require('../configuration');
 const { config } = require('../configuration');
 const { secretKey } = require('../configuration');
-
+const fs = require("fs");
+var multer = require("multer");
+const path = require('path');
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "./temp/");
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    }
+});
 const sequelize = new Sequelize(configDB, configUser, configPwd, config);
 // Override timezone formatting
 
@@ -110,10 +120,20 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                 profile.name = newuser.name;
                 await profile.save({ transaction: t });
 
-                
+            //Create default collection folder
+                var dest = './uploads/' + newuser.membership_id;
+                fs.mkdirSync(dest);
+                if (fs.existsSync(dest)) {
+                    await t.commit();
+                    return ("Inserted");
+                }
+                else
+                {
+                    await t.rollback();
+                    return ("Collection creation error!")
+                }
 
-                await t.commit();
-                return ("Inserted");
+                
             
             //return result;
         }

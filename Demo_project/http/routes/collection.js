@@ -19,10 +19,15 @@ function create({ collectionService }) {
         const collections = await collectionService.getCollection(token);
         res.json(collections);
     }));
-    router.post('/col', upload.single("file"), asyncWrapper(async (req, res) => {
+    router.post('/new_file', upload.single("file"), asyncWrapper(async (req, res) => {
         var token = req.headers.authorization;
         const dataset = await collectionService.uploadFile(req.file,req.body,token);
         res.json(dataset);
+    }));
+    router.post('/new_folder',  asyncWrapper(async (req, res) => {
+        var token = req.headers.authorization;
+        const collection = await collectionService.newFolder(req.body,token);
+        res.json(collection);
     }));
 
     return router;

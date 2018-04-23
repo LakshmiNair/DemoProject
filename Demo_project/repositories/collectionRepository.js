@@ -43,7 +43,7 @@ function create({ Collection, User,db,Dataset}) {
                     model: db.Collection
                 }
             ],
-            where: { "email": "vishnuv111@gmail.com" }
+            where: { email }
         });
         console.log(user.collections);
         return user.toUserCollectionModel();
@@ -67,10 +67,10 @@ function create({ Collection, User,db,Dataset}) {
             const collection=await db.Collection.find({where:{id:body.u_cID}});
             if(collection){
                 var from = "./temp/" + file.originalname;
-                var to = './uploads/' + collection.collection_name +'/'+ file.originalname;
+                var to = './uploads/' + user.membership_id+"/"+ collection.collection_name +'/'+ file.originalname;
                 var ext = path.extname(file.originalname);
                 var filename = path.basename(file.originalname, ext);
-                var col_path='./uploads/' + collection.collection_name;
+                var col_path= './uploads/' + user.membership_id+"/"+ collection.collection_name;
                 if(fs.existsSync(col_path)){
                     fs.copyFileSync(from, to);        
                     if (fs.existsSync(to)) {
@@ -117,38 +117,60 @@ function create({ Collection, User,db,Dataset}) {
             });
         }
     }
-    async function newFolder(folder, body, token) {
+
+    /*
+creating a folder. Provide the token and the name of the folder to be created.
+formatting:
+{
+    "token":<the provided login-token>,
+    "name":<the name of the folder to be created>
+}
+*/
+    async function newFolder(folder, token) {
         var email = jwt.decode(token, secretKey);
         const user = await db.User.find({ where: email });
         if (user) {
-            var parent = folder.cur_path;
-            var rel_dest = parent + folder.name + "/";
-            //var dest = user.path_root + rel_dest;
-            var dest = './uploads' + rel_dest;
-            fs.mkdirSync(dest);
-            if (fs.existsSync(dest)) {
-                //create new collection for user
-                //var collection = Collection.build({ "user_id": newuser.membership_id });
-                //collection.collection_name = newuser.membership_id + newuser.email;
-                //collection.create_time = new Date();
-                //await collection.save({ transaction: t });
-                return ("Folder Created!");
+            var parent = './uploads/' + user.membership_id;
+            
+            if (fs.existsSync(parent)) {
+                var dest = parent +"/"+ folder.name + "/";
+                fs.mkdirSync(dest);
+                if (fs.existsSync(dest)) {
+                    //create new collection for user
+                    var collection = Collection.build({ "user_id": user.membership_id });
+                    collection.collection_name = folder.name;
+                    collection.create_time = new Date();
+                    await collection.save();
+                    return ("Folder Created!");
                 
-                //add a reference to the new folder in the database
 
-                //Add dataset to database
-
-            } else {
-                return ({
+                } else {
+                    return ({
+                        "created": false,
+                        "message": "Folder does not exist in desired directory."
+                    });
+                }
+            }
+            else{
+                return({
                     "created": false,
-                    "message": "Folder does not exist in desired directory."
+                    "message": "Invalid Collection!"
                 });
             }
+           
+            
+        }
+        else {
+            return ({
+                "created": false,
+                "message": "Invalid User!"
+            });
         }
     }
     return {
         get,
         uploadFile,
+        newFolder,
     };
 }
 
