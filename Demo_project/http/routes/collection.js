@@ -29,6 +29,11 @@ function create({ collectionService }) {
         const collection = await collectionService.newFolder(req.body,token);
         res.json(collection);
     }));
+    router.post('/rename_folder',  asyncWrapper(async (req, res) => {
+        var token = req.headers.authorization;
+        const collection = await collectionService.renameFolder(req.body,token);
+        res.json(collection);
+    }));
 
     return router;
 }

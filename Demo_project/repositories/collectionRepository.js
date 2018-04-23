@@ -167,10 +167,71 @@ formatting:
             });
         }
     }
+
+    /*
+creating a folder. Provide the token and the name of the folder to be created.
+formatting:
+{
+   "token":<the provided login-token>,
+   "cur_name":<the name of the existing folder>,
+   "new_name":<the name of the folder to be renamed>,
+   "col_id":<collection id>
+}
+*/
+    async function renameFolder(folder, token) {
+        var email = jwt.decode(token, secretKey);
+        const user = await db.User.find({ where: email });
+        if (user) {
+            var parent = './uploads/' + user.membership_id ;
+            
+            if (fs.existsSync(parent)) {
+                var dest = parent + "/" + folder.cur_name + "/";
+                if (fs.existsSync(dest)) {
+                    var new_dest = parent + "/" + folder.new_name + "/";
+                    fs.rename(dest, new_dest, function (err) {
+                        if (err) throw err;
+                        fs.stat(new_dest, function (err, stats) {
+                            if (err) throw err;
+                            console.log('stats: ' + JSON.stringify(stats));
+                        });
+                    });
+
+                    //create new collection for user
+                    var collection = Collection.find({where:{ "id": folder.col_id }});
+                    collection.collection_name = folder.new_name;
+                    collection.update_time = new Date();
+                    await Collection.update(collection,{ returning: true, where: { id:folder.col_id  } });
+                    return ("Folder Renamed!");
+                
+
+                } else {
+                    return ({
+                        "created": false,
+                        "message": "Folder does not exist in desired directory."
+                    });
+                }
+            }
+            else{
+                return({
+                    "created": false,
+                    "message": "Invalid Collection!"
+                });
+            }
+           
+            
+        }
+        else {
+            return ({
+                "created": false,
+                "message": "Invalid User!"
+            });
+        }
+    }
     return {
         get,
         uploadFile,
         newFolder,
+            renameFolder,
     };
 }
 

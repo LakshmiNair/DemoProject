@@ -18,11 +18,16 @@ function create(collectionRepository) {
         const collection = await collectionRepository.newFolder(file,token);
         return collection;
     }
+    async function renameFolder(file,token) {
+        const collection = await collectionRepository.renameFolder(file,token);
+        return collection;
+    }
     
     return {
         getCollection,
         uploadFile,
         newFolder,
+        renameFolder,
     };
 }
 
