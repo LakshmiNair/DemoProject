@@ -31,8 +31,8 @@ function create(userRepository) {
     async function generateActivationCode(user) {
         return (await userRepository.generateActivationCode(user));
     }
-    async function updateUser(user) {
-        return (await userRepository.update(user));
+    async function updateUser(token,user) {
+        return (await userRepository.update(token,user));
     }
 
     return {

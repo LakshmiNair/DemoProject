@@ -24,6 +24,10 @@ module.exports = (sequelize) => {
         dataset_id: {
             type: Sequelize.INTEGER,
         },
+        name: {
+            type: Sequelize.STRING,
+            allowNull: false,
+        },
         create_time: {
             type: Sequelize.DATE,
         },

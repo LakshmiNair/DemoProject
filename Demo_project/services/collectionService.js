@@ -26,13 +26,22 @@ function create(collectionRepository) {
         const collection = await collectionRepository.removeFolder(file,token);
         return collection;
     }
-    
+    async function removeFile(file,token) {
+        const dataset = await collectionRepository.removeFile(file,token);
+        return dataset;
+    }
+    async function renameFile(file,token) {
+        const dataset = await collectionRepository.renameFile(file,token);
+        return dataset;
+    }
     return {
         getCollection,
         uploadFile,
         newFolder,
         renameFolder,
         removeFolder,
+        removeFile,
+        renameFile,
     };
 }
 

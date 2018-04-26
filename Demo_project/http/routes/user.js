@@ -78,7 +78,9 @@ function create({ userService }) {
         
     }));
     router.post('/updateUser', asyncWrapper(async (req, res) => {
-        const reset = await userService.updateUser(req.body);
+        var token = req.headers.authorization;
+        console.log(token);
+        const reset = await userService.updateUser(token,req.body);
         if (reset[1] == 0)
             res.json("Invalid Entry!")
         else if (reset[1] == 1)

@@ -147,10 +147,11 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
        
     }
 
-    async function update(user) {
-        var token =await jwt.decode(user.user.token, secretKey);
+    async function update(token,user) {
+       
+        var email =await jwt.decode(token, secretKey);
         const vUser = await User.findOne({
-            where: { "email": token.email }
+            where:  email 
         });
         const validuser = vUser.toUserModel();
         if (validuser) {

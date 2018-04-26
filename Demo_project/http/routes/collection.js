@@ -39,6 +39,16 @@ function create({ collectionService }) {
         const collection = await collectionService.removeFolder(req.body,token);
         res.json(collection);
     }));
+    router.post('/remove_file',  asyncWrapper(async (req, res) => {
+        var token = req.headers.authorization;
+        const dataset = await collectionService.removeFile(req.body,token);
+        res.json(dataset);
+    }));
+    router.post('/rename_file',  asyncWrapper(async (req, res) => {
+        var token = req.headers.authorization;
+        const dataset = await collectionService.renameFile(req.body,token);
+        res.json(dataset);
+    }));
 
     return router;
 }

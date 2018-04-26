@@ -1,10 +1,4 @@
-// DATA LAYER
-// UserRepository:
-// is used to provide an abstraction on top of the database ( and possible other data sources)
-// so other parts of the application are decoupled from the specific database implementation.
-// Furthermore it can hide the origin of the data from it's consumers.
-// It is possible to fetch the entities from different sources like inmemory cache, 
-// network or the db without the need to alter the consumers code.
+
 const nodemailer = require("nodemailer");
 const keygen = require('keygenerator');
 const Sequelize = require('sequelize');
@@ -30,6 +24,53 @@ var storage = multer.diskStorage({
 });
 
 var upload = multer({ storage: storage });
+/*
+A helper function for removing folders, needed a recursive way to remove any and all subdirectories/files when removing a user
+*/
+var deleteFolderRecursive = function (path) {
+    if (fs.existsSync(path)) {
+        fs.readdirSync(path).forEach(function (file, index) {
+            var curPath = path + "/" + file;
+            if (fs.lstatSync(curPath).isDirectory()) { // recurse
+                deleteFolderRecursive(curPath);
+            } else { // delete file
+                fs.unlinkSync(curPath);
+                Node.findOneAndRemove(
+                    { file_name: curPath },
+                    function (err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                    });
+            }
+        });
+        fs.rmdirSync(path);
+        Node.findOneAndRemove(
+            { file_name: path },
+            function (err) {
+                if (err) {
+                    console.log(err);
+                }
+            });
+    }
+};
+
+/**
+ * a helper function to remove a folder from the database (and all of its children)
+ */
+var dbRemoveFolderRecursive = function (id) {
+    Node.findByIdAndRemove(id, function (err, doc) {
+        if (err) {
+            console.log(err);
+        } else if (doc) {
+            doc.children.forEach(function (child, index) {
+                dbRemoveFolderRecursive(child._id); //recurse
+            });
+        } else {
+            console.log("no Doc found with id: " + id);
+        }
+    });
+};
 
 const sequelize = new Sequelize(configDB, configUser, configPwd, config);
 function create({ Collection, User,db,Dataset}) {
@@ -277,12 +318,184 @@ formatting:
             });
         }
     }
+    /* deleting a file. 
+        formatting:
+    {
+        "token":<the provided login-token>,
+        "name":<folder name>,
+        "u_dID":<dataset id>
+        }
+    */
+    async function removeFile(folder, token) {
+        var email = jwt.decode(token, secretKey);
+        const user = await db.User.find({ where: email });
+        if (user) {
+            const dataset = await Dataset.find({ where: {id:folder.u_dID} });
+            if (dataset)
+            {
+                //console.log(dataset);
+                var parent = './uploads/' + user.membership_id +"/" + folder.name;
+                var curPath=parent+"/"+dataset.name + '.'+ dataset.extension;
+                console.log(curPath);
+                if (fs.existsSync(curPath)) {
+                    fs.unlinkSync(curPath);
+                   
+                    await Dataset.destroy({ returning: true, where: {id:folder.u_dID} });
+                    return ({
+                        "deleted": true,
+                        "message": "File Removed!"
+                    });
+                }
+                else{
+                    return({
+                        "deleted": false,
+                        "message": "Invalid File!"
+                    });
+                }
+            }
+            else{
+                return ({
+                    "deleted": false,
+                    "message": "Invalid File!"
+                });
+            }
+                  
+        }
+        else {
+            return ({
+                "created": false,
+                "message": "Invalid User!"
+            });
+        }
+    }
+    //renamefile
+    /*
+renaming a file.
+formatting:
+{
+   "token":<the provided login-token>,
+   "cur_name":<the name of the existing file with extension>,
+   "new_name":<the name of the file to be renamed with extension>,
+   "folder_name":<the containing folder name>,
+   "u_dID":<dataset id>
+}
+*/
+    async function renameFile(folder, token) {
+        var email = jwt.decode(token, secretKey);
+        const user = await db.User.find({ where: email });
+        if (user) {
+            var parent = './uploads/' + user.membership_id+"/"+folder.folder_name +"/" ;
+            
+            if (fs.existsSync(parent)) {
+                var dest = parent + "/" + folder.cur_name;
+                if (fs.existsSync(dest)) {
+                    var new_dest = parent + "/" + folder.new_name ;
+                    fs.rename(dest, new_dest, function (err) {
+                        if (err) throw err;
+                        fs.stat(new_dest, function (err, stats) {
+                            if (err) throw err;
+                            console.log('stats: ' + JSON.stringify(stats));
+                        });
+                    });
+
+                    //update dataset
+                    var ext = path.extname(folder.new_name);
+                    var filename = path.basename(folder.new_name, ext);
+
+                    var dataset = Dataset.find({where:{ "id": folder.u_dID }});
+                    dataset.name = filename;
+                    dataset.extension=ext;
+                    await Dataset.update(dataset,{ returning: true, where: { id:folder.u_dID  } });
+                    return ({
+                        "created": true,
+                        "message": "File Renamed!"
+                    });
+                
+
+                } else {
+                    return ({
+                        "created": false,
+                        "message": "File does not exist in desired directory."
+                    });
+                }
+            }
+            else{
+                return({
+                    "created": false,
+                    "message": "Invalid Collection!"
+                });
+            }
+           
+            
+        }
+        else {
+            return ({
+                "created": false,
+                "message": "Invalid User!"
+            });
+        }
+    }
+    //removemultiplefiles
+    /* deleting a file. 
+        formatting:
+    {
+        "token":<the provided login-token>,
+        "name":<folder name>,
+        "u_dIDs":<dataset ids>
+        }
+    */
+    async function removemultipleFiles(folder, token) {
+        var email = jwt.decode(token, secretKey);
+        const user = await db.User.find({ where: email });
+        if (user) {
+            const dataset = await Dataset.find({ where: {id:folder.u_dID} });
+            if (dataset)
+            {
+                //console.log(dataset);
+                var parent = './uploads/' + user.membership_id +"/" + folder.name;
+                var curPath=parent+"/"+dataset.name + '.'+ dataset.extension;
+                console.log(curPath);
+                if (fs.existsSync(curPath)) {
+                    fs.unlinkSync(curPath);
+                   
+                    await Dataset.destroy({ returning: true, where: {id:folder.u_dID} });
+                    return ({
+                        "deleted": true,
+                        "message": "File Removed!"
+                    });
+                }
+                else{
+                    return({
+                        "deleted": false,
+                        "message": "Invalid File!"
+                    });
+                }
+            }
+            else{
+                return ({
+                    "deleted": false,
+                    "message": "Invalid File!"
+                });
+            }
+                  
+        }
+        else {
+            return ({
+                "created": false,
+                "message": "Invalid User!"
+            });
+        }
+    }
+    //uploadmultiplefiles
+
     return {
         get,
         uploadFile,
         newFolder,
             renameFolder,
             removeFolder,
+            removeFile,
+            renameFile,
     };
 }
 
