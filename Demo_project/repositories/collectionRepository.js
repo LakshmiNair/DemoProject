@@ -84,7 +84,7 @@ function create({ Collection, User,db,Dataset}) {
                     model: db.Collection
                 }
             ],
-            where: { email }
+            where:  email 
         });
         console.log(user.collections);
         return user.toUserCollectionModel();
@@ -102,11 +102,14 @@ function create({ Collection, User,db,Dataset}) {
 }
     */
     async function uploadFile(file,body,token) {
+        console.log("FILE")
         var email = jwt.decode(token, secretKey);
         const user = await db.User.find({ where: email });
         if (user) {
-            const collection=await db.Collection.find({where:{id:body.u_cID}});
+            console.log("USER")
+            const collection=await db.Collection.find({where:{user_id:body.u_cID}});
             if(collection){
+                console.log("COllection.......")
                 var from = "./temp/" + file.originalname;
                 var to = './uploads/' + user.membership_id+"/"+ collection.collection_name +'/'+ file.originalname;
                 var ext = path.extname(file.originalname);
@@ -170,13 +173,18 @@ formatting:
     async function newFolder(folder, token) {
         var email = jwt.decode(token, secretKey);
         const user = await db.User.find({ where: email });
+        console.log("USER",user);
         if (user) {
+            console.log("INSIDE 1 IF...")
             var parent = './uploads/' + user.membership_id;
-            
+            console.log("Patent....",parent)
             if (fs.existsSync(parent)) {
+               console.log("INSIDE 2 IF...")
                 var dest = parent +"/"+ folder.name + "/";
                 fs.mkdirSync(dest);
                 if (fs.existsSync(dest)) {
+
+                    console.log("INSIDE 3 IF...")
                     //create new collection for user
                     var collection = Collection.build({ "user_id": user.membership_id });
                     collection.collection_name = folder.name;
