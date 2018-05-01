@@ -29,6 +29,11 @@ function create({ collectionService }) {
         const dataset = await collectionService.uploadFile(req.file,req.body,token);
         res.json(dataset);
     }));
+    router.post('/new_files', upload.any(), asyncWrapper(async (req, res) => {
+        var token = req.headers.authorization;
+        const dataset = await collectionService.uploadMultipleFiles(req.files,req.body,token);
+        res.json(dataset);
+    }));
     router.post('/new_folder',  asyncWrapper(async (req, res) => {
         var token = req.headers.authorization;
         const collection = await collectionService.newFolder(req.body,token);

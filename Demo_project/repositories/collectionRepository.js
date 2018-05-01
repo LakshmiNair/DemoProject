@@ -132,7 +132,7 @@ function create({ Collection, User,db,Dataset}) {
         const user = await db.User.find({ where: email });
         if (user) {
             console.log("USER")
-            const collection=await db.Collection.find({where:{user_id:body.u_cID}});
+            const collection=await db.Collection.find({where:{id:body.u_cID}});
             if(collection){
                 console.log("COllection.......")
                 var from = "./temp/" + file.originalname;
@@ -156,6 +156,7 @@ function create({ Collection, User,db,Dataset}) {
                         //ds.metadata = metadata;
                         ds.extension = ext;
                         //ds.state = state;
+                        ds.total_size = file.size;
                         ds.deleted = false;
                         ds.save();
                         //Add dataset to database
@@ -173,6 +174,76 @@ function create({ Collection, User,db,Dataset}) {
                         "message": "Invalid Collection!"
                     });
                 }
+            }else {
+                return({
+                    "created": false,
+                    "message": "Invalid Collection!"
+                });
+            }                   
+        }
+        else {
+            return({
+                "created": false,
+                "message": "Invalid User!"
+            });
+        }
+    }
+
+    /*Adding multiple files to collection
+   {
+   token:<the provided login-token>,
+   files:<the files to store>,
+   u_cID:<the collection ID>,
+   
+   
+}
+   */
+    async function uploadMultipleFiles(files,body,token) {
+        var email = jwt.decode(token, secretKey);
+        const user = await db.User.find({ where: email });
+        if (user) {
+            console.log("USER")
+            const collection=await db.Collection.find({where:{id:body.u_cID}});
+            if(collection){
+                var from,to,ext,filename,col_path;
+                files.forEach((file)=>{
+                    from = "./temp/" + file.originalname;
+                    to = './uploads/' + user.membership_id+"/"+ collection.collection_name +'/'+ file.originalname;
+                    ext = path.extname(file.originalname);
+                    console.log(to);
+                    filename = path.basename(file.originalname, ext);
+                    col_path= './uploads/' + user.membership_id+"/"+ collection.collection_name;
+                    if(fs.existsSync(col_path)){
+                        fs.copyFileSync(from, to);        
+                        if (fs.existsSync(to)) {
+            
+                           fs.unlinkSync(from);
+                            var ds = Dataset.build();
+                            ds.collection_id = body.u_cID;
+                            ds.name = filename;
+                            ds.create_time = new Date();
+                            ds.extension = ext;
+                            ds.total_size = file.size;
+                            ds.deleted = false;
+                            ds.save();
+                            //Add dataset to database
+                            
+                        } else {
+                            return({
+                                "created": false,
+                                "message": "File does not exist in the directory!"
+                            });
+                        }
+                    }
+                    else {
+                        return({
+                            "created": false,
+                            "message": "Invalid Collection!"
+                        });
+                    }
+                });
+                return ("Files Uploaded!");
+                
             }else {
                 return({
                     "created": false,
@@ -597,6 +668,7 @@ formatting:
         get,
         getfiles,
         uploadFile,
+        uploadMultipleFiles,
         newFolder,
         renameFolder,
         removeFolder,

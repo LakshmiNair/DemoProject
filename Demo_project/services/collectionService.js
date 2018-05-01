@@ -17,6 +17,10 @@ function create(collectionRepository) {
         const dataset = await collectionRepository.uploadFile(file,body,token);
         return dataset;
     }
+    async function uploadMultipleFiles(files,body,token) {
+        const dataset = await collectionRepository.uploadMultipleFiles(files,body,token);
+        return dataset;
+    }
     async function newFolder(file,token) {
         const collection = await collectionRepository.newFolder(file,token);
         return collection;
@@ -45,6 +49,7 @@ function create(collectionRepository) {
         getCollection,
         getfiles,
         uploadFile,
+        uploadMultipleFiles,
         newFolder,
         renameFolder,
         removeFolder,
