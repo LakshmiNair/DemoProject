@@ -506,7 +506,7 @@ formatting:
         "u_cIDs":<collection id>
         }
     */
-    async function removemultipleFiles(folder, token) {
+    async function removeallFiles(folder, token) {
         var email = jwt.decode(token, secretKey);
         
         const user = await db.User.find({ where: email });
