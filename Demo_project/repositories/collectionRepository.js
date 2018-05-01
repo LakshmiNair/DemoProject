@@ -92,6 +92,31 @@ function create({ Collection, User,db,Dataset}) {
         ////console.log(collection);
         //return collection.toCollectionModel();
     }
+    
+    /*Get all files from collection
+   {
+   token:<the provided login-token>,
+   u_cID:<the collection ID>,
+   
+   
+}
+   */
+    async function getfiles(body,token) {
+        var email = jwt.decode(token, secretKey);
+        const user = await db.User.find({ where: email });
+        if (user) {
+            
+            const dataset=await db.Dataset.findAll({where:{collection_id:body.u_cID}});
+            return dataset;
+            }            
+        else {
+            return({
+                "created": false,
+                "message": "Invalid User!"
+            });
+        }
+        
+    }
     /*Adding a file to collection
     {
     token:<the provided login-token>,
@@ -570,13 +595,14 @@ formatting:
 
     return {
         get,
+        getfiles,
         uploadFile,
         newFolder,
-            renameFolder,
-            removeFolder,
-            removeFile,
-            renameFile,
-            removemultipleFiles,
+        renameFolder,
+        removeFolder,
+        removeFile,
+        renameFile,
+        removemultipleFiles,
     };
 }
 

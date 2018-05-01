@@ -9,7 +9,10 @@ function create(collectionRepository) {
         const collections = await collectionRepository.get(token);
         return collections;
     }
-
+    async function getfiles(body,token) {
+        const dataset = await collectionRepository.getfiles(body,token);
+        return dataset;
+    }
     async function uploadFile(file,body,token) {
         const dataset = await collectionRepository.uploadFile(file,body,token);
         return dataset;
@@ -40,6 +43,7 @@ function create(collectionRepository) {
     }
     return {
         getCollection,
+        getfiles,
         uploadFile,
         newFolder,
         renameFolder,

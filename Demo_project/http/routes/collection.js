@@ -14,10 +14,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 function create({ collectionService }) {
-    router.get('/', asyncWrapper(async (req, res) => {
+    router.get('/', asyncWrapper(async(req, res) => {
         var token = req.headers.authorization;
         const collections = await collectionService.getCollection(token);
         res.json(collections);
+    }));
+    router.get('/get_files', asyncWrapper(async(req, res) => {
+        var token = req.headers.authorization;
+        const dataset = await collectionService.getfiles(req.body,token);
+        res.json(dataset);
     }));
     router.post('/new_file', upload.single("file"), asyncWrapper(async (req, res) => {
         var token = req.headers.authorization;
