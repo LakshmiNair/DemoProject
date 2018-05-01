@@ -34,6 +34,10 @@ function create(collectionRepository) {
         const dataset = await collectionRepository.renameFile(file,token);
         return dataset;
     }
+    async function removemultipleFiles(file,token) {
+        const dataset = await collectionRepository.removemultipleFiles(file,token);
+        return dataset;
+    }
     return {
         getCollection,
         uploadFile,
@@ -42,6 +46,7 @@ function create(collectionRepository) {
         removeFolder,
         removeFile,
         renameFile,
+        removemultipleFiles,
     };
 }
 

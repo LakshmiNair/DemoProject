@@ -163,7 +163,7 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                 //save user address
                 console.log(user.address);
                 await aR.update(user.address, { transaction: t });
-                console.log(user.profile);
+                //console.log(user.profile);
                 //save user profile
                 await pR.update(user.profile, { transaction: t });
 

@@ -110,6 +110,7 @@ function create({ Collection, User,db,Dataset}) {
                 var from = "./temp/" + file.originalname;
                 var to = './uploads/' + user.membership_id+"/"+ collection.collection_name +'/'+ file.originalname;
                 var ext = path.extname(file.originalname);
+                console.log(to);
                 var filename = path.basename(file.originalname, ext);
                 var col_path= './uploads/' + user.membership_id+"/"+ collection.collection_name;
                 if(fs.existsSync(col_path)){
@@ -436,40 +437,111 @@ formatting:
         }
     }
     //removemultiplefiles
-    /* deleting a file. 
+    /* deleting multiple files file. 
         formatting:
     {
         "token":<the provided login-token>,
-        "name":<folder name>,
-        "u_dIDs":<dataset ids>
+        "name":<dataset folder name>,
+        "u_dIDs":<dataset ids>...[1,2,3]
         }
     */
     async function removemultipleFiles(folder, token) {
         var email = jwt.decode(token, secretKey);
+        
         const user = await db.User.find({ where: email });
         if (user) {
-            const dataset = await Dataset.find({ where: {id:folder.u_dID} });
+            const dataset = await Dataset.findAll({attributes:['name','extension'], where: {id:folder.u_dIDs} });
+            //console.log(dataset);
             if (dataset)
             {
-                //console.log(dataset);
-                var parent = './uploads/' + user.membership_id +"/" + folder.name;
-                var curPath=parent+"/"+dataset.name + '.'+ dataset.extension;
-                console.log(curPath);
-                if (fs.existsSync(curPath)) {
-                    fs.unlinkSync(curPath);
-                   
-                    await Dataset.destroy({ returning: true, where: {id:folder.u_dID} });
+                var files=[];
+                dataset.forEach((datasetItem) => {
+                    files.push(datasetItem.name+datasetItem.extension);
+                });
+                //console.log(files)
+                var parent;
+                var curPath;
+                files.forEach((fileItem)=>{
+                    parent = './uploads/' + user.membership_id +"/" + folder.name;
+                    curPath=parent+"/"+fileItem;
+                    if (fs.existsSync(curPath)) {
+                        fs.unlinkSync(curPath);
+                    }
+                    else{
+                        return({
+                            "deleted": false,
+                            "message": "Invalid File!"
+                        });
+                    }
+                });
+                await Dataset.destroy({ returning: true, where: {id:folder.u_dIDs} });
                     return ({
                         "deleted": true,
-                        "message": "File Removed!"
+                        "message": "Files Removed!"
                     });
-                }
-                else{
-                    return({
-                        "deleted": false,
-                        "message": "Invalid File!"
-                    });
-                }
+
+                
+            }
+            else{
+                return ({
+                    "deleted": false,
+                    "message": "Invalid File!"
+                });
+            }
+                  
+        }
+        else {
+            return ({
+                "created": false,
+                "message": "Invalid User!"
+            });
+        }
+    }
+    //removeallfiles
+    /* deleting all file. 
+        formatting:
+    {
+        "token":<the provided login-token>,
+        "name":<folder name>,
+        "u_cIDs":<collection id>
+        }
+    */
+    async function removemultipleFiles(folder, token) {
+        var email = jwt.decode(token, secretKey);
+        
+        const user = await db.User.find({ where: email });
+        if (user) {
+            const dataset = await Dataset.findAll({attributes:['name','extension'], where: {id:folder.u_dIDs} });
+            //console.log(dataset);
+            if (dataset)
+            {
+                var files=[];
+                dataset.forEach((datasetItem) => {
+                    files.push(datasetItem.name+datasetItem.extension);
+                });
+                //console.log(files)
+                var parent;
+                var curPath;
+                files.forEach((fileItem)=>{
+                    parent = './uploads/' + user.membership_id +"/" + folder.name;
+                    curPath=parent+"/"+fileItem;
+                    if (fs.existsSync(curPath)) {
+                        fs.unlinkSync(curPath);
+                    }
+                    else{
+                        return({
+                            "deleted": false,
+                            "message": "Invalid File!"
+                        });
+                    }
+                });
+                await Dataset.destroy({ returning: true, where: {id:folder.u_dIDs} });
+                return ({
+                    "deleted": true,
+                    "message": "Files Removed!"
+                });
+
+                
             }
             else{
                 return ({
@@ -496,6 +568,7 @@ formatting:
             removeFolder,
             removeFile,
             renameFile,
+            removemultipleFiles,
     };
 }
 

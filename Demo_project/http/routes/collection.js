@@ -49,7 +49,11 @@ function create({ collectionService }) {
         const dataset = await collectionService.renameFile(req.body,token);
         res.json(dataset);
     }));
-
+    router.post('/remove_mFile',  asyncWrapper(async (req, res) => {
+        var token = req.headers.authorization;
+        const dataset = await collectionService.removemultipleFiles(req.body,token);
+        res.json(dataset);
+    }));
     return router;
 }
 
