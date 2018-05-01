@@ -19,7 +19,7 @@ function create({ collectionService }) {
         const collections = await collectionService.getCollection(token);
         res.json(collections);
     }));
-    router.get('/get_files', asyncWrapper(async(req, res) => {
+    router.post('/get_files', asyncWrapper(async(req, res) => {
         var token = req.headers.authorization;
         const dataset = await collectionService.getfiles(req.body,token);
         res.json(dataset);
