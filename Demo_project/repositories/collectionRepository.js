@@ -319,7 +319,6 @@ renaming a folder.
 formatting:
 {
    "token":<the provided login-token>,
-   "cur_name":<the name of the existing folder>,
    "new_name":<the name of the folder to be renamed>,
    "u_cID":<collection id>
 }
@@ -331,7 +330,10 @@ formatting:
             var parent = './uploads/' + user.membership_id ;
             
             if (fs.existsSync(parent)) {
-                var dest = parent + "/" + folder.cur_name + "/";
+                const collection =await Collection.find({where:{ "id": folder.u_cID }});
+                var dest = parent + "/" + collection.collection_name + "/";
+                console.log(dest);
+
                 if (fs.existsSync(dest)) {
                     var new_dest = parent + "/" + folder.new_name + "/";
                     fs.rename(dest, new_dest, function (err) {
@@ -343,10 +345,11 @@ formatting:
                     });
 
                     //create new collection for user
-                    var collection = Collection.find({where:{ "id": folder.u_cID }});
-                    collection.collection_name = folder.new_name;
-                    collection.update_time = new Date();
-                    await Collection.update(collection,{ returning: true, where: { id:folder.u_cID  } });
+                    var ucollection =Collection.find({where:{ "id": folder.u_cID }});
+                    ucollection.collection_name = folder.new_name;
+                    ucollection.update_time = new Date();
+                    console.log(ucollection);
+                    await Collection.update(ucollection,{ returning: true, where: { id:folder.u_cID  } });
                     return ({
                         "created": true,
                         "message": "Folder Renamed!"
@@ -427,7 +430,7 @@ formatting:
         formatting:
     {
         "token":<the provided login-token>,
-        "name":<folder name>,
+        "u_cID":<collection id>,
         "u_dID":<dataset id>
         }
     */
@@ -438,8 +441,8 @@ formatting:
             const dataset = await Dataset.find({ where: {id:folder.u_dID} });
             if (dataset)
             {
-                //console.log(dataset);
-                var parent = './uploads/' + user.membership_id +"/" + folder.name;
+                const col = await Collection.find({ where: {id:folder.u_cID} });
+                var parent = './uploads/' + user.membership_id +"/" + col.name;
                 var curPath=parent+"/"+dataset.name + '.'+ dataset.extension;
                 console.log(curPath);
                 if (fs.existsSync(curPath)) {
@@ -481,7 +484,7 @@ formatting:
    "token":<the provided login-token>,
    "cur_name":<the name of the existing file with extension>,
    "new_name":<the name of the file to be renamed with extension>,
-   "folder_name":<the containing folder name>,
+   "u_cID":<dataset id>,
    "u_dID":<dataset id>
 }
 */
@@ -489,7 +492,8 @@ formatting:
         var email = jwt.decode(token, secretKey);
         const user = await db.User.find({ where: email });
         if (user) {
-            var parent = './uploads/' + user.membership_id+"/"+folder.folder_name +"/" ;
+            const col = await Collection.find({ where: {id:folder.u_cID} });
+            var parent = './uploads/' + user.membership_id+"/"+col.name +"/" ;
             
             if (fs.existsSync(parent)) {
                 var dest = parent + "/" + folder.cur_name;
@@ -555,7 +559,7 @@ formatting:
         const user = await db.User.find({ where: email });
         if (user) {
             const dataset = await Dataset.findAll({attributes:['name','extension'], where: {id:folder.u_dIDs} });
-            //console.log(dataset);
+            const col = await Collection.find({where: {id:folder.u_cID} });
             if (dataset)
             {
                 var files=[];
@@ -566,7 +570,7 @@ formatting:
                 var parent;
                 var curPath;
                 files.forEach((fileItem)=>{
-                    parent = './uploads/' + user.membership_id +"/" + folder.name;
+                    parent = './uploads/' + user.membership_id +"/" + col.name;
                     curPath=parent+"/"+fileItem;
                     if (fs.existsSync(curPath)) {
                         fs.unlinkSync(curPath);
@@ -606,8 +610,8 @@ formatting:
         formatting:
     {
         "token":<the provided login-token>,
-        "name":<folder name>,
-        "u_cIDs":<collection id>
+        "u_cID":<collection id>,
+        "u_dIDs":<dataset id>
         }
     */
     async function removeallFiles(folder, token) {
@@ -616,6 +620,7 @@ formatting:
         const user = await db.User.find({ where: email });
         if (user) {
             const dataset = await Dataset.findAll({attributes:['name','extension'], where: {id:folder.u_dIDs} });
+            const col = await Collection.find({where: {id:folder.u_cID} });
             //console.log(dataset);
             if (dataset)
             {
@@ -627,7 +632,7 @@ formatting:
                 var parent;
                 var curPath;
                 files.forEach((fileItem)=>{
-                    parent = './uploads/' + user.membership_id +"/" + folder.name;
+                    parent = './uploads/' + user.membership_id +"/" + col.name;
                     curPath=parent+"/"+fileItem;
                     if (fs.existsSync(curPath)) {
                         fs.unlinkSync(curPath);
