@@ -444,6 +444,7 @@ formatting:
 
             if (dataset)
             {
+                console.log("Inside DATASET")
                 
                 const col = await Collection.find({ where: {id:folder.u_cID} });
                
@@ -453,13 +454,13 @@ formatting:
                 console.log(curPath);
                 if (fs.existsSync(curPath)) {
                     fs.unlinkSync(curPath);
-                   
+                   console.log("Inside finale If.......")
                     await Dataset.destroy({ returning: true, where: {id:folder.u_dID} });
-                     return ("Folder Created!");
-                    // return ({
-                    //     "deleted": true,
-                    //     "message": "File Removed!"
-                    // });
+                    
+                    return ({
+                        "deleted": true,
+                        "message": "File Removed!"
+                    });
                 }
                 else{
                     return({
@@ -500,7 +501,7 @@ formatting:
         const user = await db.User.find({ where: email });
         if (user) {
             const col = await Collection.find({ where: {id:folder.u_cID} });
-            var parent = './uploads/' + user.membership_id+"/"+col.name +"/" ;
+            var parent = './uploads/' + user.membership_id+"/"+col.collection_name +"/" ;
             
             if (fs.existsSync(parent)) {
                 var dest = parent + "/" + folder.cur_name;
