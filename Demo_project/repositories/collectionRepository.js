@@ -435,24 +435,31 @@ formatting:
         }
     */
     async function removeFile(folder, token) {
+        
         var email = jwt.decode(token, secretKey);
         const user = await db.User.find({ where: email });
         if (user) {
+           
             const dataset = await Dataset.find({ where: {id:folder.u_dID} });
+
             if (dataset)
             {
+                
                 const col = await Collection.find({ where: {id:folder.u_cID} });
-                var parent = './uploads/' + user.membership_id +"/" + col.name;
-                var curPath=parent+"/"+dataset.name + '.'+ dataset.extension;
+               
+                var parent = './uploads/' + user.membership_id +"/" + col.collection_name;
+              
+                var curPath=parent+"/"+dataset.name + dataset.extension;
                 console.log(curPath);
                 if (fs.existsSync(curPath)) {
                     fs.unlinkSync(curPath);
                    
                     await Dataset.destroy({ returning: true, where: {id:folder.u_dID} });
-                    return ({
-                        "deleted": true,
-                        "message": "File Removed!"
-                    });
+                     return ("Folder Created!");
+                    // return ({
+                    //     "deleted": true,
+                    //     "message": "File Removed!"
+                    // });
                 }
                 else{
                     return({
