@@ -108,30 +108,34 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                 var guid = aguid(newuser.email);
                 newuser.membership_id = guid;
                 newuser.password = password;
+                newuser.active=false;
                 await User.build(newuser).save({ transaction: t });
-                
-                //save user address
-                var address = UserAddress.build({ "user_id": newuser.membership_id });
-                address.name = newuser.name;
-                await address.save({ transaction: t });
+                await sendActivationEmail(newuser);
+                await t.commit();
+                return ("Inserted");
 
-                //save user profile
-                var profile = UserProfile.build({ "user_id": newuser.membership_id });
-                profile.name = newuser.name;
-                await profile.save({ transaction: t });
+            //    //save user address
+            //    var address = UserAddress.build({ "user_id": newuser.membership_id });
+            //    address.name = newuser.name;
+            //    await address.save({ transaction: t });
 
-            //Create default collection folder
-                var dest = './uploads/' + newuser.membership_id;
-                fs.mkdirSync(dest);
-                if (fs.existsSync(dest)) {
-                    await t.commit();
-                    return ("Inserted");
-                }
-                else
-                {
-                    await t.rollback();
-                    return ("Collection creation error!")
-                }
+            //    //save user profile
+            //    var profile = UserProfile.build({ "user_id": newuser.membership_id });
+            //    profile.name = newuser.name;
+            //    await profile.save({ transaction: t });
+
+            ////Create default collection folder
+            //    var dest = './uploads/' + newuser.membership_id;
+            //    fs.mkdirSync(dest);
+            //    if (fs.existsSync(dest)) {
+            //        await t.commit();
+            //        return ("Inserted");
+            //    }
+            //    else
+            //    {
+            //        await t.rollback();
+            //        return ("Collection creation error!")
+            //    }
 
                 
             
@@ -188,6 +192,49 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
 
     }
 
+    async function sendActivationEmail(user) {
+        try {
+            //check if valid email
+
+            const user1 = await User.find({
+                where: {
+                    email: user.email
+                }
+            });
+            
+            if (user1) {
+               
+
+                var smtpTransport = nodemailer.createTransport({
+                    service: "gmail",
+                    host: "smtp.gmail.com",
+                    auth: {
+                        user: "singlephoton.dev@gmail.com",
+                        pass: "singlephoton2018"
+                    }
+                });
+                var mailOptions = {
+                    to: user.email,
+                    subject: "Test Email",
+                    text: "<a href='www.google.com'>Click here to Activation Your Account: </a>" ,
+                }
+                const message = await smtpTransport.sendMail(mailOptions);
+                if (message.error)
+                    return message.error;
+                else {
+                   
+                    return ("Email sent");
+                }
+            }   
+            //console.log(message);
+            //return message;
+        }
+        catch (error) {
+            return error;
+        }
+        
+        
+    }
     async function generateActivationCode(user) {
         try {
             //check if valid email

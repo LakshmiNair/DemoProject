@@ -87,7 +87,8 @@ function create({ Collection, User,db,Dataset}) {
             where:  email 
         });
         console.log(user.collections);
-        return user.toUserCollectionModel();
+        return user.collections;
+        //return user.toUserCollectionModel();
         //const collection = await Collection.find({ where: { user_id: user.membership_id } });
         ////console.log(collection);
         //return collection.toCollectionModel();

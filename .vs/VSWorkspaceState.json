@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Demo_project",
+    "\\Demo_project\\configuration",
+    "\\Demo_project\\database",
+    "\\Demo_project\\database\\entities",
+    "\\Demo_project\\http",
+    "\\Demo_project\\http\\routes",
+    "\\Demo_project\\models",
+    "\\Demo_project\\repositories",
+    "\\Demo_project\\services"
+  ],
+  "PreviewInSolutionExplorer": false
+}
