@@ -9,7 +9,7 @@ const nodemailer = require("nodemailer");
 const keygen = require('keygenerator');
 const Sequelize = require('sequelize');
 const aguid = require('aguid');
-const bcrypt = require('bcrypt');
+//const bcrypt = require('bcrypt');
 const jwt = require('jwt-simple');
 const { configDB } = require('../configuration');
 const { configUser } = require('../configuration');
@@ -65,7 +65,8 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
     }
     async function validate(password, user, name) {
         var result1;
-        let comparison = await bcrypt.compare(user.password, password);
+        let comparison=true;
+        //let comparison = await bcrypt.compare(user.password, password);
         if (!comparison)
             return ('Unauthorized User!');
         else {
@@ -91,11 +92,11 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
 
     async function add(user) {
         console.log(user);
-        var password;
-        bcrypt.hash(user.user.password, 10, function (err, hash) {
-            password = hash;
+        var password=user.user.password;
+        //bcrypt.hash(user.user.password, 10, function (err, hash) {
+        //    password = hash;
             
-        });
+        //});
 
         const t = await sequelize.transaction();
         try {
@@ -287,8 +288,8 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
     async function resetPassword(user) {
         
         
-        var password = await bcrypt.hash(user.password, 10);
-        console.log(password);
+        var password = user.password;
+            //await bcrypt.hash(user.password, 10);
         const validuser1 =await User.find({
             where: {
                 email: user.email
