@@ -97,17 +97,18 @@ function create({ Collection, User,db,Dataset}) {
     /*Get all files from collection
    {
    token:<the provided login-token>,
-   u_cID:<the collection ID>,
-   
+   //u_cID:<the collection ID>,
+   name:<the folder name>
    
 }
    */
     async function getfiles(body,token) {
+        
         var email = jwt.decode(token, secretKey);
         const user = await db.User.find({ where: email });
         if (user) {
-            console.log(body.u_cID);
-            const dataset=await Dataset.findAll({where:{collection_id:body.u_cID}});
+            const collection=await Collection.find({where:{collection_name:body.name,user_id:user.membership_id}})
+            const dataset=await Dataset.findAll({where:{collection_id:collection.id}});
             return dataset;
             }            
         else {
