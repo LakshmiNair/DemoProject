@@ -35,7 +35,36 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
         const users = await User.findAll();
         return users.map(user => user.toUserModel());
     }
-
+    async function verifyUser(user) {
+        const u = await User.findOne({where: { email: user.email }});
+        if(u)
+        {
+            const a = await UserActCode.findAll({
+                limit: 1,
+                where: {
+                    user_id: u.membership_id,
+                    
+                },
+                order: [['generated_time', 'DESC']]
+            });
+            if(a)
+            {
+                if(a[0].active==true && a[0].activation_code==user.id)
+                {
+                    
+                    await User.update(
+                        { active: true },
+                        { returning: true, where: { email: u.email  } }
+                    );
+                    await UserActCode.destroy(
+                        { where: { id: a[0].id } }
+                    );
+                
+                }
+            }
+        }
+        return "Activated";
+    }
     async function getUser(token) {
         try {
             var email = jwt.decode(token, secretKey);
@@ -111,14 +140,44 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                 newuser.password = password;
                 newuser.active=false;
                 await User.build(newuser).save({ transaction: t });
-                await sendActivationEmail(newuser);
+                console.log('entered activation');
+                       
+
+                var smtpTransport = nodemailer.createTransport({
+                    service: "gmail",
+                    host: "smtp.gmail.com",
+                    auth: {
+                        user: "singlephoton.dev@gmail.com",
+                        pass: "singlephoton2018"
+                    }
+                });
+                var aCode = keygen.password();
+            //const id = await jwt.encode(user.email, aCode);
+                link="http://localhost:3010/users/verify?id="+aCode+"&email="+newuser.email;
+                
+                console.log('Email');
+                var mailOptions = {
+                    to: newuser.email,
+                    subject: "Test Email",
+                    html: "Hello "+ newuser.name +",<br> Please Click on the link to verify your email.<br><a href="+link+">Click here to verify</a>", 
+                }
+                console.log(mailOptions);
+                const message = await smtpTransport.sendMail(mailOptions);
+                if (message.error)
+                    return message.error;
+                else {
+                   
+                    var activationcode = UserActCode.build();
+                    activationcode.user_id = newuser.membership_id;
+                    activationcode.activation_code = aCode;
+                    activationcode.generated_time = new Date();
+                    activationcode.active = true;
+                    await activationcode.save({ transaction: t });
+                }
+                //await sendActivationEmail(newuser);
                 await t.commit();
                 return ("Inserted");
-
-           
-
-                
-            
+                        
             //return result;
         }
         catch (error) {
@@ -204,15 +263,8 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
     async function sendActivationEmail(user) {
         try {
             //check if valid email
-
-            const user1 = await User.find({
-                where: {
-                    email: user.email
-                }
-            });
-            
-            if (user1) {
-               
+            console.log('entered activation');
+                       
 
                 var smtpTransport = nodemailer.createTransport({
                     service: "gmail",
@@ -223,20 +275,21 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                     }
                 });
                 var aCode = keygen.password();
-                const id = await jwt.encode(user.email, aCode);
-                link="http://localhost:3010/verify?id="+id;
+                //const id = await jwt.encode(user.email, aCode);
+                link="http://localhost:3010/verify?id="+aCode+"&email="+user.email;
                 var activationcode = UserActCode.build();
-                activationcode.user_id = user1.membership_id;
+                activationcode.user_id = user.membership_id;
                 activationcode.activation_code = aCode;
                 activationcode.generated_time = new Date();
                 activationcode.active = true;
                 await activationcode.save();
+                console.log('Email');
                 var mailOptions = {
                     to: user.email,
                     subject: "Test Email",
-                    text: "Hello,<br> Please Click on the link to verify your email.<br><a href="+link+">Click here to verify</a>" 
-                    //<a href='www.google.com'>Click here to Activation Your Account: </a>" ,
-                }
+                    text: "Hello,<br> Please Click on the link to verify your email.<br><a href="+link+">Click here to verify</a>", 
+                    }
+                console.log(mailOptions);
                 const message = await smtpTransport.sendMail(mailOptions);
                 if (message.error)
                     return message.error;
@@ -244,7 +297,7 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                    
                     return ("Email sent");
                 }
-            }   
+             
             //console.log(message);
             //return message;
         }
@@ -348,6 +401,7 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
 
     return {
         add,
+        verifyUser,
         validateUser,
         getAll,
         getUser,

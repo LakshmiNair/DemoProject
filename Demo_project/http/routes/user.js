@@ -8,7 +8,10 @@ function create({ userService }) {
         const users = await userService.getAllUsers();
         res.json(users);
     }));
-
+    router.get('/verify', asyncWrapper(async (req, res) => {
+        const users = await userService.verifyUser(req.query);
+        res.json("verified");
+    }));
     router.get('/getUser', asyncWrapper(async (req, res) => {
         var token = req.headers.authorization;
         const user = await userService.getUser(token);
