@@ -36,34 +36,68 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
         return users.map(user => user.toUserModel());
     }
     async function verifyUser(user) {
-        const u = await User.findOne({where: { email: user.email }});
-        if(u)
-        {
-            const a = await UserActCode.findAll({
-                limit: 1,
-                where: {
-                    user_id: u.membership_id,
-                    
-                },
-                order: [['generated_time', 'DESC']]
-            });
-            if(a)
+
+       
+        const t = await sequelize.transaction();
+        try {
+
+            const u = await User.findOne({where: { email: user.email }});
+            if(u)
             {
-                if(a[0].active==true && a[0].activation_code==user.id)
-                {
+                const a = await UserActCode.findAll({
+                    limit: 1,
+                    where: {
+                        user_id: u.membership_id,
                     
-                    await User.update(
-                        { active: true },
-                        { returning: true, where: { email: u.email  } }
-                    );
-                    await UserActCode.destroy(
-                        { where: { id: a[0].id } }
-                    );
-                
+                    },
+                    order: [['generated_time', 'DESC']]
+                });
+                if(a)
+                {
+                    if(a[0].active==true && a[0].activation_code==user.id)
+                    {
+                  
+                        await User.update(
+                            { active: true },
+                            { returning: true, where: { email: u.email  } }
+                        );
+                        await UserActCode.destroy(
+                            { where: { id: a[0].id } }
+                        );
+                        //save user address
+                        var address = UserAddress.build({ "user_id": u.membership_id });
+                        address.name = u.name;
+                        await address.save({ transaction: t });
+
+                        //save user profile
+                        var profile = UserProfile.build({ "user_id": u.membership_id });
+                        profile.name = u.name;
+                        await profile.save({ transaction: t });
+
+                        //Create default collection folder
+                        var dest = './uploads/' + u.membership_id;
+                        fs.mkdirSync(dest);
+                        if (fs.existsSync(dest)) {
+                            await t.commit();
+                            return ("Inserted");
+                        }
+                        else
+                        {
+                            await t.rollback();
+                            return ("Collection creation error!")
+                        }
+                    }
                 }
             }
+            return "Activated";
         }
-        return "Activated";
+        catch (error) {
+            // Rollback transaction if any errors were encountered
+            await t.rollback();
+            
+            //console.log(t);
+            return (error);
+        }
     }
     async function getUser(token) {
         try {
@@ -152,9 +186,11 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
                         pass: "singlephoton2018"
                     }
                 });
+
+
                 var aCode = keygen.password();
             //const id = await jwt.encode(user.email, aCode);
-                link="http://localhost:3010/users/verify?id="+aCode+"&email="+newuser.email;
+                link="http://localhost:4200/user?id="+aCode+"&email="+newuser.email;
                 
                 console.log('Email');
                 var mailOptions = {
@@ -413,3 +449,4 @@ function create({ User, UserAddress, UserProfile, Collection, UserActCode, db })
 }
 
 module.exports.create = create;
+

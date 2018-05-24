@@ -9,6 +9,7 @@ function create({ userService }) {
         res.json(users);
     }));
     router.get('/verify', asyncWrapper(async (req, res) => {
+
         const users = await userService.verifyUser(req.query);
         res.json("verified");
     }));
